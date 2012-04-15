@@ -1,8 +1,7 @@
-package com.atomicleopard.webFramework.webService;
+package com.atomicleopard.webFramework.http.service;
 
-import com.atomicleopard.webFramework.exception.BaseException;
 
-public class HttpRequestException extends BaseException {
+public class HttpRequestException extends HttpException {
 	private static final long serialVersionUID = 2788663509700705018L;
 
 	public HttpRequestException(String format, Object... formatArgs) {

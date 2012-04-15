@@ -1,4 +1,4 @@
-package com.atomicleopard.webFramework.webService.typeConvertor;
+package com.atomicleopard.webFramework.http.service.typeTransformer;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -7,7 +7,7 @@ import java.io.UnsupportedEncodingException;
 import com.atomicleopard.expressive.ETransformer;
 import com.atomicleopard.webFramework.exception.BaseException;
 
-public class StringTypeConvertor implements ETransformer<String, InputStream> {
+public class OutgoingStringTypeTransformer implements ETransformer<String, InputStream> {
 	private static final String encoding = "UTF-8";
 
 	@Override

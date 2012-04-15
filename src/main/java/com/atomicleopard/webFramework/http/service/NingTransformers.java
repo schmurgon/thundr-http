@@ -1,4 +1,4 @@
-package com.atomicleopard.webFramework.webService;
+package com.atomicleopard.webFramework.http.service;
 
 import com.atomicleopard.expressive.ETransformer;
 import com.atomicleopard.webFramework.http.Cookie;

@@ -1,9 +1,11 @@
-package com.atomicleopard.webFramework.webService;
+package com.atomicleopard.webFramework.http.service;
 
 import java.io.InputStream;
 import java.net.URLEncoder;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -13,6 +15,7 @@ import jodd.util.Base64;
 import jodd.util.StringUtil;
 
 import com.atomicleopard.expressive.transform.ETransformers;
+import com.atomicleopard.webFramework.http.ContentType;
 import com.atomicleopard.webFramework.http.Cookie;
 import com.atomicleopard.webFramework.http.FileParameter;
 import com.atomicleopard.webFramework.http.HttpSupport;
@@ -20,23 +23,23 @@ import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClient.BoundRequestBuilder;
 import com.ning.http.client.AsyncHttpClientConfig;
 
-public class BasicHttpRequest implements HttpRequest {
+public class HttpRequestImpl implements HttpRequest {
 	private String encoding = "UTF-8";
 	private String url;
 	private String username;
 	private String password;
 	private Object body;
-	private List<FileParameter> fileParameters;
+	private List<FileParameter> fileParameters = Collections.emptyList();
 	private Map<String, String> headers = new HashMap<String, String>();
 	private Map<String, Object> parameters = new LinkedHashMap<String, Object>();
-	private List<Cookie> cookies;
+	private List<Cookie> cookies = new ArrayList<Cookie>();
 	private String mimeType;
 	private boolean followRedirects = true;
 	private long timeout = 60000;
 	private String scheme;
 	private HttpService httpService;
 
-	public BasicHttpRequest(HttpService httpService, String url) {
+	public HttpRequestImpl(HttpService httpService, String url) {
 		this.httpService = httpService;
 		this.url = HttpSupport.convertToValidUrl(url);
 	}
@@ -110,6 +113,19 @@ public class BasicHttpRequest implements HttpRequest {
 		return this;
 	}
 
+	/**
+	 * Sets the content type of the request. For content types not supported in the {@link ContentType} enum,
+	 * you can set the content type header directly. <code>
+	 * <pre>
+	 * request.header({@link HttpSupport#HttpHeaderContentType}, "content/type");
+	 * </pre>
+	 * </code>
+	 */
+	public HttpRequest contentType(ContentType contentType) {
+		header(HttpSupport.HttpHeaderContentType, contentType.value());
+		return this;
+	}
+
 	public HttpRequest headers(Map<String, String> headers) {
 		this.headers = headers;
 		return this;
@@ -155,12 +171,13 @@ public class BasicHttpRequest implements HttpRequest {
 	public HttpResponse get() {
 		BoundRequestBuilder builder = createHttpClient().prepareGet(getBaseUrl());
 		setCommonProperties(builder);
+		setContentTypeIfNotPresent(ContentType.TextPlain);
 		addHeaders(builder);
 		addCookies(builder);
 		addQueryParameters(builder);
 
 		try {
-			return new HttpResponseImpl(builder.execute());
+			return new HttpResponseImpl(builder.execute(), httpService);
 		} catch (Exception e) {
 			throw new HttpRequestException(e, "Failed to create a GET request: %s", e.getMessage());
 		}
@@ -169,12 +186,13 @@ public class BasicHttpRequest implements HttpRequest {
 	public HttpResponse post() {
 		BoundRequestBuilder builder = createHttpClient().preparePost(getBaseUrl());
 		setCommonProperties(builder);
+		setContentTypeIfNotPresent(ContentType.ApplicationFormUrlEncoded);
 		addHeaders(builder);
 		addCookies(builder);
 		addParameters(builder);
 
 		try {
-			return new HttpResponseImpl(builder.execute());
+			return new HttpResponseImpl(builder.execute(), httpService);
 		} catch (Exception e) {
 			throw new HttpRequestException(e, "Failed to create a POST request: %s", e.getMessage());
 		}
@@ -183,12 +201,13 @@ public class BasicHttpRequest implements HttpRequest {
 	public HttpResponse put() {
 		BoundRequestBuilder builder = createHttpClient().preparePut(getBaseUrl());
 		setCommonProperties(builder);
+		setContentTypeIfNotPresent(ContentType.ApplicationFormUrlEncoded);
 		addHeaders(builder);
 		addCookies(builder);
 		addParameters(builder);
 
 		try {
-			return new HttpResponseImpl(builder.execute());
+			return new HttpResponseImpl(builder.execute(), httpService);
 		} catch (Exception e) {
 			throw new HttpRequestException(e, "Failed to create a PUT request: %s", e.getMessage());
 		}
@@ -197,12 +216,13 @@ public class BasicHttpRequest implements HttpRequest {
 	public HttpResponse delete() {
 		BoundRequestBuilder builder = createHttpClient().prepareDelete(getBaseUrl());
 		setCommonProperties(builder);
+		setContentTypeIfNotPresent(ContentType.TextPlain);
 		addHeaders(builder);
 		addCookies(builder);
 		addQueryParameters(builder);
 
 		try {
-			return new HttpResponseImpl(builder.execute());
+			return new HttpResponseImpl(builder.execute(), httpService);
 		} catch (Exception e) {
 			throw new HttpRequestException(e, "Failed to create a DELETE request: %s", e.getMessage());
 		}
@@ -211,12 +231,13 @@ public class BasicHttpRequest implements HttpRequest {
 	public HttpResponse options() {
 		BoundRequestBuilder builder = createHttpClient().prepareOptions(getBaseUrl());
 		setCommonProperties(builder);
+		setContentTypeIfNotPresent(ContentType.TextPlain);
 		addHeaders(builder);
 		addCookies(builder);
 		addQueryParameters(builder);
 
 		try {
-			return new HttpResponseImpl(builder.execute());
+			return new HttpResponseImpl(builder.execute(), httpService);
 		} catch (Exception e) {
 			throw new HttpRequestException(e, "Failed to create an OPTIONS request: %s", e.getMessage());
 		}
@@ -225,12 +246,13 @@ public class BasicHttpRequest implements HttpRequest {
 	public HttpResponse head() {
 		BoundRequestBuilder builder = createHttpClient().prepareHead(getBaseUrl());
 		setCommonProperties(builder);
+		setContentTypeIfNotPresent(ContentType.TextPlain);
 		addHeaders(builder);
 		addCookies(builder);
 		addQueryParameters(builder);
 
 		try {
-			return new HttpResponseImpl(builder.execute());
+			return new HttpResponseImpl(builder.execute(), httpService);
 		} catch (Exception e) {
 			throw new HttpRequestException(e, "Failed to create a HEAD request: %s", e.getMessage());
 		}
@@ -306,7 +328,7 @@ public class BasicHttpRequest implements HttpRequest {
 	}
 
 	private void addBody(BoundRequestBuilder builder) {
-		InputStream is = httpService.convert(body);
+		InputStream is = httpService.convertOutgoing(body);
 		builder.setBody(is);
 	}
 
@@ -317,6 +339,12 @@ public class BasicHttpRequest implements HttpRequest {
 	 */
 	private String getBaseUrl() {
 		return StringUtil.cutToIndexOf(url, '?');
+	}
+
+	private void setContentTypeIfNotPresent(ContentType contentType) {
+		if (!headers.containsKey(HttpSupport.HttpHeaderContentType)) {
+			header(HttpSupport.HttpHeaderContentType, contentType.value());
+		}
 	}
 
 	private AsyncHttpClient createHttpClient() {

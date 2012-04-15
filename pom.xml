@@ -3,8 +3,8 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>com.atomicleopard</groupId>
-	<artifactId>webFrameworkHttpService</artifactId>
+	<groupId>com.atomicleopard.webFramework</groupId>
+	<artifactId>http.service</artifactId>
 	<version>1.0.0-SNAPSHOT</version>
 
 	<parent>
@@ -14,7 +14,7 @@
 	</parent>
 	<dependencies>
 		<dependency>
-			<groupId>com.atomicleopard</groupId>
+			<groupId>com.atomicleopard.webFramework</groupId>
 			<artifactId>webFramework</artifactId>
 			<version>1.0.0-SNAPSHOT</version>
 			<scope>compile</scope>
@@ -26,6 +26,14 @@
 			<artifactId>async-http-client</artifactId>
 			<version>1.7.2</version>
 			<scope>compile</scope>
+		</dependency>
+
+		<!-- Testing -->
+		<dependency>
+			<groupId>org.simpleframework</groupId>
+			<artifactId>simple</artifactId>
+			<version>4.1.21</version>
+			<scope>test</scope>
 		</dependency>
 	</dependencies>
 </project>

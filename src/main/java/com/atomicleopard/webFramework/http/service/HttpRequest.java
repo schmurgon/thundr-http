@@ -1,4 +1,4 @@
-package com.atomicleopard.webFramework.webService;
+package com.atomicleopard.webFramework.http.service;
 
 import java.util.Collection;
 import java.util.List;
