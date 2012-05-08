@@ -1,6 +1,10 @@
 package com.atomicleopard.webFramework.http.service;
 
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.HttpCookie;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -14,45 +18,152 @@ import java.util.Map;
 import jodd.util.Base64;
 import jodd.util.StringUtil;
 
-import com.atomicleopard.expressive.transform.ETransformers;
 import com.atomicleopard.webFramework.http.ContentType;
-import com.atomicleopard.webFramework.http.Cookie;
 import com.atomicleopard.webFramework.http.FileParameter;
 import com.atomicleopard.webFramework.http.HttpSupport;
-import com.ning.http.client.AsyncHttpClient;
-import com.ning.http.client.AsyncHttpClient.BoundRequestBuilder;
-import com.ning.http.client.AsyncHttpClientConfig;
+import com.atomicleopard.webFramework.util.Streams;
+import com.google.appengine.api.urlfetch.FetchOptions;
+import com.google.appengine.api.urlfetch.HTTPHeader;
+import com.google.appengine.api.urlfetch.HTTPMethod;
+import com.google.appengine.api.urlfetch.HTTPRequest;
 
 public class HttpRequestImpl implements HttpRequest {
 	private String encoding = "UTF-8";
 	private String url;
-	private String username;
-	private String password;
 	private Object body;
-	private List<FileParameter> fileParameters = Collections.emptyList();
 	private Map<String, String> headers = new HashMap<String, String>();
 	private Map<String, Object> parameters = new LinkedHashMap<String, Object>();
-	private List<Cookie> cookies = new ArrayList<Cookie>();
-	private String mimeType;
+	private List<HttpCookie> cookies = new ArrayList<HttpCookie>();
 	private boolean followRedirects = true;
 	private long timeout = 60000;
+	private HttpServiceImpl httpService;
+	private String username;
+	private String password;
+	@SuppressWarnings("unused")
 	private String scheme;
-	private HttpService httpService;
+	@SuppressWarnings("unused")
+	private List<FileParameter> fileParameters = Collections.emptyList();
 
-	public HttpRequestImpl(HttpService httpService, String url) {
+	public HttpRequestImpl(HttpServiceImpl httpService, String url) {
 		this.httpService = httpService;
 		this.url = HttpSupport.convertToValidUrl(url);
 	}
 
 	/**
-	 * Add a MimeType to the web service request.
+	 * Indicate if the WS should continue when hitting a 301 or 302
 	 * 
-	 * @param mimeType
 	 * @return the WebRequest for chaining.
 	 */
-	public HttpRequest mimeType(String mimeType) {
-		this.mimeType = mimeType;
+	@Override
+	public HttpRequest followRedirects(boolean value) {
+		this.followRedirects = value;
 		return this;
+	}
+
+	@Override
+	public HttpRequest timeout(long millis) {
+		this.timeout = millis;
+		return this;
+	}
+
+	@Override
+	public HttpRequest body(Object body) {
+		this.body = body;
+		return this;
+	}
+
+	/**
+	 * Sets the content type of the request. For content types not supported in the {@link ContentType} enum,
+	 * you can set the content type header directly. <code>
+	 * <pre>
+	 * request.header({@link HttpSupport#HttpHeaderContentType}, "content/type");
+	 * </pre>
+	 * </code>
+	 */
+	@Override
+	public HttpRequest contentType(ContentType contentType) {
+		return contentType(contentType.value());
+	}
+
+	@Override
+	public HttpRequest contentType(String contentType) {
+		header(HttpSupport.HttpHeaderContentType, contentType);
+		return null;
+	}
+
+	@Override
+	public HttpRequest headers(Map<String, String> headers) {
+		this.headers = headers;
+		return this;
+	}
+
+	@Override
+	public HttpRequest header(String name, String value) {
+		this.headers.put(name, value);
+		return this;
+	}
+
+	@Override
+	public HttpRequest cookie(HttpCookie cookie) {
+		this.cookies.add(cookie);
+		return this;
+	}
+
+	@Override
+	public HttpRequest cookies(Collection<HttpCookie> cookie) {
+		this.cookies.addAll(cookie);
+		return this;
+	}
+
+	@Override
+	public HttpRequest parameter(String name, String value) {
+		this.parameters.put(name, value);
+		return this;
+	}
+
+	@Override
+	public HttpRequest parameter(String name, Object value) {
+		this.parameters.put(name, value);
+		return this;
+	}
+
+	/**
+	 * Adds the given parameters to request.
+	 * GET: parameters are passed as a query string
+	 * POST: parameters are passed in the body
+	 * PUT: parameters are passed in the body
+	 * DELETE: parameters are passed as a query string
+	 * HEAD: parameters are passed as a query string
+	 */
+	@Override
+	public HttpRequest parameters(Map<String, Object> parameters) {
+		this.parameters.putAll(parameters);
+		return this;
+	}
+
+	@Override
+	public HttpResponse get() {
+		return headGetDelete(HTTPMethod.GET);
+	}
+
+	@Override
+	public HttpResponse post() {
+		return postOrPut(HTTPMethod.POST);
+	}
+
+	@Override
+	public HttpResponse put() {
+		return postOrPut(HTTPMethod.PUT);
+	}
+
+	@Override
+	public HttpResponse delete() {
+		return headGetDelete(HTTPMethod.DELETE);
+	}
+
+	@Override
+	public HttpResponse head() {
+		return headGetDelete(HTTPMethod.HEAD);
 	}
 
 	/**
@@ -83,21 +194,6 @@ public class HttpRequestImpl implements HttpRequest {
 		return authenticate(username, password, "BASIC");
 	}
 
-	/**
-	 * Indicate if the WS should continue when hitting a 301 or 302
-	 * 
-	 * @return the WebRequest for chaining.
-	 */
-	public HttpRequest followRedirects(boolean value) {
-		this.followRedirects = value;
-		return this;
-	}
-
-	public HttpRequest timeout(long millis) {
-		this.timeout = millis;
-		return this;
-	}
-
 	public HttpRequest files(FileParameter... fileParameters) {
 		this.fileParameters = Arrays.asList(fileParameters);
 		return this;
@@ -108,153 +204,37 @@ public class HttpRequestImpl implements HttpRequest {
 		return this;
 	}
 
-	public HttpRequest body(Object body) {
-		this.body = body;
-		return this;
-	}
+	private HttpResponse headGetDelete(HTTPMethod headGetDelete) {
 
-	/**
-	 * Sets the content type of the request. For content types not supported in the {@link ContentType} enum,
-	 * you can set the content type header directly. <code>
-	 * <pre>
-	 * request.header({@link HttpSupport#HttpHeaderContentType}, "content/type");
-	 * </pre>
-	 * </code>
-	 */
-	public HttpRequest contentType(ContentType contentType) {
-		header(HttpSupport.HttpHeaderContentType, contentType.value());
-		return this;
-	}
-
-	public HttpRequest headers(Map<String, String> headers) {
-		this.headers = headers;
-		return this;
-	}
-
-	public HttpRequest header(String name, String value) {
-		this.headers.put(name, value);
-		return this;
-	}
-
-	public HttpRequest cookie(Cookie cookie) {
-		this.cookies.add(cookie);
-		return this;
-	}
-
-	public HttpRequest cookies(Collection<Cookie> cookie) {
-		this.cookies.addAll(cookie);
-		return this;
-	}
-
-	public HttpRequest parameter(String name, String value) {
-		this.parameters.put(name, value);
-		return this;
-	}
-
-	public HttpRequest parameter(String name, Object value) {
-		this.parameters.put(name, value);
-		return this;
-	}
-
-	/**
-	 * Adds the given parameters to request.
-	 * GET: parameters are passed as a query string
-	 * POST: parameters are passed in the body
-	 * PUT: parameters are passed in the body
-	 * DELETE: parameters are passed as a query string
-	 */
-	public HttpRequest parameters(Map<String, Object> parameters) {
-		this.parameters.putAll(parameters);
-		return this;
-	}
-
-	public HttpResponse get() {
-		BoundRequestBuilder builder = createHttpClient().prepareGet(getBaseUrl());
-		setCommonProperties(builder);
+		FetchOptions fetchOptions = createFetchOptions();
 		setContentTypeIfNotPresent(ContentType.TextPlain);
-		addHeaders(builder);
-		addCookies(builder);
-		addQueryParameters(builder);
+		URL requestUrl = buildGetRequestUrl();
+		HTTPRequest request = new HTTPRequest(requestUrl, headGetDelete, fetchOptions);
+		addHeaders(request);
+		addCookies(request);
+		addBody(request);
 
 		try {
-			return new HttpResponseImpl(builder.execute(), httpService);
+			return httpService.fetch(request);
 		} catch (Exception e) {
-			throw new HttpRequestException(e, "Failed to create a GET request: %s", e.getMessage());
+			throw new HttpRequestException(e, "Failed to create a %s request: %s", headGetDelete, e.getMessage());
 		}
 	}
 
-	public HttpResponse post() {
-		BoundRequestBuilder builder = createHttpClient().preparePost(getBaseUrl());
-		setCommonProperties(builder);
+	private HttpResponseImpl postOrPut(HTTPMethod postOrPut) {
+		preparePostParameterBody();
+		FetchOptions fetchOptions = createFetchOptions();
 		setContentTypeIfNotPresent(ContentType.ApplicationFormUrlEncoded);
-		addHeaders(builder);
-		addCookies(builder);
-		addParameters(builder);
+		URL requestUrl = buildPostRequestUrl();
+		HTTPRequest request = new HTTPRequest(requestUrl, postOrPut, fetchOptions);
+		addHeaders(request);
+		addCookies(request);
+		addBody(request);
 
 		try {
-			return new HttpResponseImpl(builder.execute(), httpService);
+			return httpService.fetch(request);
 		} catch (Exception e) {
-			throw new HttpRequestException(e, "Failed to create a POST request: %s", e.getMessage());
-		}
-	}
-
-	public HttpResponse put() {
-		BoundRequestBuilder builder = createHttpClient().preparePut(getBaseUrl());
-		setCommonProperties(builder);
-		setContentTypeIfNotPresent(ContentType.ApplicationFormUrlEncoded);
-		addHeaders(builder);
-		addCookies(builder);
-		addParameters(builder);
-
-		try {
-			return new HttpResponseImpl(builder.execute(), httpService);
-		} catch (Exception e) {
-			throw new HttpRequestException(e, "Failed to create a PUT request: %s", e.getMessage());
-		}
-	}
-
-	public HttpResponse delete() {
-		BoundRequestBuilder builder = createHttpClient().prepareDelete(getBaseUrl());
-		setCommonProperties(builder);
-		setContentTypeIfNotPresent(ContentType.TextPlain);
-		addHeaders(builder);
-		addCookies(builder);
-		addQueryParameters(builder);
-
-		try {
-			return new HttpResponseImpl(builder.execute(), httpService);
-		} catch (Exception e) {
-			throw new HttpRequestException(e, "Failed to create a DELETE request: %s", e.getMessage());
-		}
-	}
-
-	public HttpResponse options() {
-		BoundRequestBuilder builder = createHttpClient().prepareOptions(getBaseUrl());
-		setCommonProperties(builder);
-		setContentTypeIfNotPresent(ContentType.TextPlain);
-		addHeaders(builder);
-		addCookies(builder);
-		addQueryParameters(builder);
-
-		try {
-			return new HttpResponseImpl(builder.execute(), httpService);
-		} catch (Exception e) {
-			throw new HttpRequestException(e, "Failed to create an OPTIONS request: %s", e.getMessage());
-		}
-	}
-
-	public HttpResponse head() {
-		BoundRequestBuilder builder = createHttpClient().prepareHead(getBaseUrl());
-		setCommonProperties(builder);
-		setContentTypeIfNotPresent(ContentType.TextPlain);
-		addHeaders(builder);
-		addCookies(builder);
-		addQueryParameters(builder);
-
-		try {
-			return new HttpResponseImpl(builder.execute(), httpService);
-		} catch (Exception e) {
-			throw new HttpRequestException(e, "Failed to create a HEAD request: %s", e.getMessage());
+			throw new HttpRequestException(e, "Failed to create a %s request: %s", postOrPut, e.getMessage());
 		}
 	}
 
@@ -297,48 +277,38 @@ public class HttpRequestImpl implements HttpRequest {
 		return sb.toString();
 	}
 
-	private void setCommonProperties(BoundRequestBuilder builder) {
-		builder.setFollowRedirects(followRedirects);
-		builder.setBodyEncoding(encoding);
+	private FetchOptions createFetchOptions() {
+		FetchOptions fetchOptions = FetchOptions.Builder.withDefaults();
+		fetchOptions = fetchOptions.setDeadline((double) timeout / (double) 1000);
+		return fetchOptions = followRedirects ? fetchOptions.followRedirects() : fetchOptions.doNotFollowRedirects();
 	}
 
-	private void addCookies(BoundRequestBuilder builder) {
-		List<com.ning.http.client.Cookie> cookies = ETransformers.transformAllUsing(NingTransformers.toNingCookie).to(this.cookies);
-		for (com.ning.http.client.Cookie cookie : cookies) {
-			builder.addCookie(cookie);
+	private void addCookies(HTTPRequest request) {
+		for (HttpCookie cookie : cookies) {
+			request.addHeader(new HTTPHeader("Cookie", cookie.toString()));
 		}
 	}
 
-	private void addHeaders(BoundRequestBuilder builder) {
+	private void addHeaders(HTTPRequest request) {
 		for (Map.Entry<String, String> header : headers.entrySet()) {
-			builder.addHeader(header.getKey(), StringUtil.toString(header.getValue()));
+			request.addHeader(new HTTPHeader(header.getKey(), StringUtil.toString(header.getValue())));
 		}
 	}
 
-	private void addQueryParameters(BoundRequestBuilder builder) {
+	private void preparePostParameterBody() {
+		List<String> parameterPairs = new ArrayList<String>(this.parameters.size());
 		for (Map.Entry<String, Object> parameter : parameters.entrySet()) {
-			builder.addQueryParameter(parameter.getKey(), StringUtil.toString(parameter.getValue()));
+			String pair = String.format("%s=%s", encodeParameter(parameter.getKey()), encodeParameter(StringUtil.toString(parameter.getValue())));
+			parameterPairs.add(pair);
 		}
+		body = StringUtil.join(parameterPairs, "&");
 	}
 
-	private void addParameters(BoundRequestBuilder builder) {
-		for (Map.Entry<String, Object> parameter : parameters.entrySet()) {
-			builder.addParameter(parameter.getKey(), StringUtil.toString(parameter.getValue()));
+	private void addBody(HTTPRequest request) {
+		if (body != null) {
+			InputStream is = httpService.convertOutgoing(body);
+			request.setPayload(Streams.readBytes(is));
 		}
-	}
-
-	private void addBody(BoundRequestBuilder builder) {
-		InputStream is = httpService.convertOutgoing(body);
-		builder.setBody(is);
-	}
-
-	/**
-	 * Return the request url without any request parameters
-	 * 
-	 * @return
-	 */
-	private String getBaseUrl() {
-		return StringUtil.cutToIndexOf(url, '?');
 	}
 
 	private void setContentTypeIfNotPresent(ContentType contentType) {
@@ -347,10 +317,33 @@ public class HttpRequestImpl implements HttpRequest {
 		}
 	}
 
-	private AsyncHttpClient createHttpClient() {
-		AsyncHttpClientConfig.Builder config = new AsyncHttpClientConfig.Builder();
-		config.setRequestTimeoutInMs((int) timeout);
-		config.setConnectionTimeoutInMs((int) timeout);
-		return new AsyncHttpClient(config.build());
+	private URL buildGetRequestUrl() {
+		String requestUrlString = url;
+		try {
+			String queryString = createQueryString();
+			if (StringUtil.isNotBlank(queryString)) {
+				requestUrlString = String.format("%s%s%s", requestUrlString, url.contains("?") ? "&" : "?", queryString);
+			}
+			return new URL(requestUrlString);
+		} catch (MalformedURLException e) {
+			throw new HttpRequestException(e, "Failed to create destination url - generated '%s': %s", requestUrlString, e.getMessage());
+		}
+	}
+
+	private URL buildPostRequestUrl() {
+		String requestUrlString = url;
+		try {
+			return new URL(requestUrlString);
+		} catch (MalformedURLException e) {
+			throw new HttpRequestException(e, "Failed to create destination url - generated '%s': %s", requestUrlString, e.getMessage());
+		}
+	}
+
+	private String encodeParameter(String value) {
+		try {
+			return URLEncoder.encode(value, encoding);
+		} catch (UnsupportedEncodingException e) {
+			throw new HttpRequestException(e, "Unable to format the parameter using %s: %s", encoding, e.getMessage());
+		}
 	}
 }

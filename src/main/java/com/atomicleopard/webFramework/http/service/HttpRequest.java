@@ -1,15 +1,12 @@
 package com.atomicleopard.webFramework.http.service;
 
+import java.net.HttpCookie;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 
-import com.atomicleopard.webFramework.http.Cookie;
-import com.atomicleopard.webFramework.http.FileParameter;
+import com.atomicleopard.webFramework.http.ContentType;
 
 public interface HttpRequest {
-	public HttpRequest authenticate(String username, String password);
-
 	/**
 	 * Indicate if the WS should continue when hitting a 301 or 302
 	 * 
@@ -18,10 +15,6 @@ public interface HttpRequest {
 	public HttpRequest followRedirects(boolean value);
 
 	public HttpRequest timeout(long millis);
-
-	public HttpRequest files(FileParameter... fileParameters);
-
-	public HttpRequest files(List<FileParameter> fileParameters);
 
 	public HttpRequest body(Object body);
 
@@ -40,14 +33,18 @@ public interface HttpRequest {
 
 	public HttpRequest parameter(String name, Object value);
 
-	public HttpRequest cookie(Cookie cookie);
-
-	public HttpRequest cookies(Collection<Cookie> cookie);
-
 	/**
 	 * Adds the given parameters to request.
 	 */
 	public HttpRequest parameters(Map<String, Object> parameters);
+
+	public HttpRequest contentType(ContentType contentType);
+	
+	public HttpRequest contentType(String contentType);
+
+	public HttpRequest cookie(HttpCookie cookie);
+
+	public HttpRequest cookies(Collection<HttpCookie> cookie);
 
 	public HttpResponse get();
 
@@ -57,7 +54,13 @@ public interface HttpRequest {
 
 	public HttpResponse delete();
 
-	public HttpResponse options();
-
 	public HttpResponse head();
+
+	// Authentication not implemented
+	// public HttpRequest authenticate(String username, String password);
+	// public HttpRequest authenticate(String username, String password, String scheme) {
+
+	// Attachments and multipart not implemented
+	// public HttpRequest files(FileParameter... fileParameters);
+	// public HttpRequest files(List<FileParameter> fileParameters);
 }

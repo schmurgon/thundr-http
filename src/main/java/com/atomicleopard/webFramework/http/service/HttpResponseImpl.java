@@ -1,67 +1,78 @@
 package com.atomicleopard.webFramework.http.service;
 
-import java.io.IOException;
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.net.MalformedURLException;
+import java.net.HttpCookie;
 import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
-import com.atomicleopard.expressive.transform.ETransformers;
-import com.atomicleopard.webFramework.http.Cookie;
-import com.ning.http.client.ListenableFuture;
-import com.ning.http.client.Response;
+import com.atomicleopard.expressive.Expressive;
+import com.atomicleopard.webFramework.http.HttpSupport;
+import com.google.appengine.api.urlfetch.HTTPHeader;
+import com.google.appengine.api.urlfetch.HTTPResponse;
 
 public class HttpResponseImpl implements HttpResponse {
-
-	private ListenableFuture<Response> future;
-	private Response response;
+	private Future<HTTPResponse> future;
+	private HTTPResponse response;
+	private Map<String, List<String>> headers;
 	private HttpService service;
+	private Map<String, List<HttpCookie>> cookies;
 
-	public HttpResponseImpl(ListenableFuture<Response> listenableFuture, HttpService service) {
-		this.future = listenableFuture;
+	public HttpResponseImpl(Future<HTTPResponse> future, HttpService service) {
+		this.future = future;
 		this.service = service;
 	}
 
 	@Override
 	public int getStatus() {
-		return response().getStatusCode();
-	}
-
-	@Override
-	public String getStatusText() {
-		return response().getStatusText();
+		return response().getResponseCode();
 	}
 
 	@Override
 	public String getContentType() {
-		return response().getContentType();
+		return getHeader(HttpSupport.HttpHeaderContentType);
 	}
 
 	@Override
 	public String getHeader(String name) {
-		return response().getHeader(name);
+		List<String> headers = getHeaders().get(name);
+		return headers == null ? null : headers.get(0);
+	}
+
+	@Override
+	public List<String> getHeaders(String name) {
+		return getHeaders().get(name);
 	}
 
 	@Override
 	public Map<String, List<String>> getHeaders() {
-		return response().getHeaders();
+		response();
+		return Collections.unmodifiableMap(headers);
 	}
 
 	@Override
-	public Cookie getCookie(String cookieName) {
-		for (com.ning.http.client.Cookie cookie : response.getCookies()) {
-			if (cookieName.equals(cookie.getName())) {
-				return NingTransformers.fromNingCookie.to(cookie);
-			}
-		}
-		return null;
+	public HttpCookie getCookie(String cookieName) {
+		List<HttpCookie> cookies = getCookies(cookieName);
+		return cookies == null ? null : cookies.get(0);
 	}
 
 	@Override
-	public List<Cookie> getCookies() {
-		return ETransformers.transformAllUsing(NingTransformers.fromNingCookie).to(response.getCookies());
+	public List<HttpCookie> getCookies(String name) {
+		response();
+		return cookies.get(name);
+	}
+
+	@Override
+	public List<HttpCookie> getCookies() {
+		response();
+		return Expressive.flatten(cookies.values());
 	}
 
 	@Override
@@ -76,35 +87,29 @@ public class HttpResponseImpl implements HttpResponse {
 
 	@Override
 	public byte[] getBodyAsBytes() {
-		try {
-			return response().getResponseBodyAsBytes();
-		} catch (IOException e) {
-			throw new HttpResponseException(e, "Failed to get response body: %s", e.getMessage());
-		}
+		return response().getContent();
 	}
 
 	@Override
 	public InputStream getBodyAsStream() {
-		try {
-			return response().getResponseBodyAsStream();
-		} catch (IOException e) {
-			throw new HttpResponseException(e, "Failed to get response body: %s", e.getMessage());
-		}
+		return new ByteArrayInputStream(response().getContent());
 	}
 
 	@Override
 	public URI getUri() {
 		try {
-			return response().getUri();
-		} catch (MalformedURLException e) {
+			return response().getFinalUrl().toURI();
+		} catch (URISyntaxException e) {
 			throw new HttpResponseException(e, "Uri cannot be parsed: %s", e.getMessage());
 		}
 	}
 
-	private Response response() {
+	private HTTPResponse response() {
 		if (response == null) {
 			try {
 				response = future.get();
+				headers = buildHeaderMap();
+				cookies = buildCookieMap();
 				return response;
 			} catch (InterruptedException e) {
 				throw new HttpRequestException("Failed to wait for completion of asynchronous request: %s", e.getMessage());
@@ -113,5 +118,40 @@ public class HttpResponseImpl implements HttpResponse {
 			}
 		}
 		return response;
+	}
+
+	private Map<String, List<String>> buildHeaderMap() {
+		Map<String, List<String>> headers = new LinkedHashMap<String, List<String>>();
+		for (HTTPHeader header : response.getHeaders()) {
+			String key = header.getName();
+			String value = header.getValue();
+			List<String> values = headers.get(key);
+			if (values == null) {
+				values = new ArrayList<String>();
+				headers.put(key, values);
+			}
+			values.add(value);
+		}
+		return headers;
+	}
+
+	private Map<String, List<HttpCookie>> buildCookieMap() {
+		Map<String, List<HttpCookie>> cookies = new LinkedHashMap<String, List<HttpCookie>>();
+		List<String> cookieHeaders = headers.get(HttpSupport.HttpHeaderSetCookie);
+		if (cookieHeaders != null) {
+			for (String setCookieHeader : cookieHeaders) {
+				List<HttpCookie> cookieSet = HttpCookie.parse(setCookieHeader);
+				for (HttpCookie httpCookie : cookieSet) {
+					String name = httpCookie.getName();
+					List<HttpCookie> existingCookies = cookies.get(name);
+					if (existingCookies == null) {
+						existingCookies = new ArrayList<HttpCookie>();
+						cookies.put(name, existingCookies);
+					}
+					existingCookies.add(httpCookie);
+				}
+			}
+		}
+		return cookies;
 	}
 }

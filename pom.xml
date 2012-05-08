@@ -20,14 +20,6 @@
 			<scope>compile</scope>
 		</dependency>
 
-		<!-- Http connectivity -->
-		<dependency>
-			<groupId>com.ning</groupId>
-			<artifactId>async-http-client</artifactId>
-			<version>1.7.2</version>
-			<scope>compile</scope>
-		</dependency>
-
 		<!-- Testing -->
 		<dependency>
 			<groupId>org.simpleframework</groupId>
