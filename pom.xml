@@ -14,8 +14,8 @@
 	
 	<dependencies>
 		<dependency>
-			<groupId>com.atomicleopard.webFramework</groupId>
-			<artifactId>webFramework</artifactId>
+			<groupId>com.threewks.thundr</groupId>
+			<artifactId>thundr</artifactId>
 			<version>1.0.0-SNAPSHOT</version>
 			<scope>compile</scope>
 		</dependency>
