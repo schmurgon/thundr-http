@@ -1,6 +1,6 @@
-package com.atomicleopard.webFramework.http.service;
+package com.threewks.thundr.http.service;
 
-import com.atomicleopard.webFramework.exception.BaseException;
+import com.threewks.thundr.exception.BaseException;
 
 public class HttpException extends BaseException {
 	private static final long serialVersionUID = -7412818353654682030L;

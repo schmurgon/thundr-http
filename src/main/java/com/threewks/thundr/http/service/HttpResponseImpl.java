@@ -1,4 +1,4 @@
-package com.atomicleopard.webFramework.http.service;
+package com.threewks.thundr.http.service;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -14,7 +14,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 import com.atomicleopard.expressive.Expressive;
-import com.atomicleopard.webFramework.http.HttpSupport;
+import com.threewks.thundr.http.HttpSupport;
 import com.google.appengine.api.urlfetch.HTTPHeader;
 import com.google.appengine.api.urlfetch.HTTPResponse;
 

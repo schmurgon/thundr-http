@@ -1,11 +1,11 @@
-package com.atomicleopard.webFramework.http.service;
+package com.threewks.thundr.http.service;
 
-import com.atomicleopard.webFramework.injection.UpdatableInjectionContext;
-import com.atomicleopard.webFramework.logger.Logger;
+import com.threewks.thundr.injection.UpdatableInjectionContext;
+import com.threewks.thundr.logger.Logger;
 import com.google.appengine.api.urlfetch.URLFetchService;
 import com.google.appengine.api.urlfetch.URLFetchServiceFactory;
 
-public class ServiceInjectionConfiguration implements com.atomicleopard.webFramework.injection.InjectionConfiguration {
+public class ServiceInjectionConfiguration implements com.threewks.thundr.injection.InjectionConfiguration {
 	@Override
 	public void configure(UpdatableInjectionContext injectionContext) {
 		URLFetchService urlFetchService = URLFetchServiceFactory.getURLFetchService();

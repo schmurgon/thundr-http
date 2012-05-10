@@ -1,11 +1,11 @@
-package com.atomicleopard.webFramework.http.service.typeTransformer;
+package com.threewks.thundr.http.service.typeTransformer;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 
 import com.atomicleopard.expressive.ETransformer;
-import com.atomicleopard.webFramework.exception.BaseException;
+import com.threewks.thundr.exception.BaseException;
 
 public class OutgoingStringTypeTransformer implements ETransformer<String, InputStream> {
 	private static final String encoding = "UTF-8";

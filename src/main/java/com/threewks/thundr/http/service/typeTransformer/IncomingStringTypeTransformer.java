@@ -1,9 +1,9 @@
-package com.atomicleopard.webFramework.http.service.typeTransformer;
+package com.threewks.thundr.http.service.typeTransformer;
 
 import java.io.InputStream;
 
 import com.atomicleopard.expressive.ETransformer;
-import com.atomicleopard.webFramework.util.Streams;
+import com.threewks.thundr.util.Streams;
 
 public class IncomingStringTypeTransformer implements ETransformer<InputStream, String> {
 	@Override

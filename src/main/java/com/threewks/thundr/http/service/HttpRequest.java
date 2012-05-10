@@ -1,10 +1,10 @@
-package com.atomicleopard.webFramework.http.service;
+package com.threewks.thundr.http.service;
 
 import java.net.HttpCookie;
 import java.util.Collection;
 import java.util.Map;
 
-import com.atomicleopard.webFramework.http.ContentType;
+import com.threewks.thundr.http.ContentType;
 
 public interface HttpRequest {
 	/**

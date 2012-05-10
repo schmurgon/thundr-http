@@ -1,4 +1,4 @@
-package com.atomicleopard.webFramework.http.service;
+package com.threewks.thundr.http.service;
 
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.*;
@@ -15,8 +15,8 @@ import org.simpleframework.http.Cookie;
 import org.simpleframework.http.Request;
 import org.simpleframework.http.Response;
 
-import com.atomicleopard.webFramework.http.service.HttpResponse;
-import com.atomicleopard.webFramework.http.service.HttpServiceImpl;
+import com.threewks.thundr.http.service.HttpResponse;
+import com.threewks.thundr.http.service.HttpServiceImpl;
 
 @Ignore
 public class HttpServiceImplIT {
