@@ -5,13 +5,27 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.threewks.thundr</groupId>
 	<artifactId>http-service</artifactId>
-	<version>1.0.0-SNAPSHOT</version>
+	<version>0.9.3-SNAPSHOT</version>
+	
+	<repositories>
+		<repository>
+			<id>newsclassifieds-cloudbees</id>
+			<url>http://repository-newsclassifieds.forge.cloudbees.com/release/</url>
+		</repository>
+	</repositories>
 	
 	<scm>
 	    <connection>scm:git:https://github.com/3wks/http-service</connection>
 	    <developerConnection>scm:git:https://github.com/3wks/http-service</developerConnection>
 	    <url>https://github.com/3wks/http-service</url>
   	</scm>
+  	
+  	<distributionManagement>
+		<repository>
+			<id>newsclassifieds-cloudbees</id>
+			<url>dav:https://repository-newsclassifieds.forge.cloudbees.com/release/</url>
+		</repository>
+  	</distributionManagement>
 	
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -22,7 +36,7 @@
 		<dependency>
 			<groupId>com.threewks.thundr</groupId>
 			<artifactId>thundr</artifactId>
-			<version>1.0.0-SNAPSHOT</version>
+			<version>0.9.3</version>
 			<scope>compile</scope>
 		</dependency>
 
@@ -54,6 +68,13 @@
 	</dependencies>
 	
 	<build>
+		<extensions>
+			<extension>
+				<groupId>org.apache.maven.wagon</groupId>
+				<artifactId>wagon-webdav</artifactId>
+				<version>1.0-beta-2</version>
+			</extension>
+		</extensions>
 		<plugins>
 			<plugin> <!-- Release plugin -->
 				<groupId>org.apache.maven.plugins</groupId>
