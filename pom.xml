@@ -4,8 +4,14 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.threewks.thundr</groupId>
-	<artifactId>http.service</artifactId>
+	<artifactId>http-service</artifactId>
 	<version>1.0.0-SNAPSHOT</version>
+	
+	<scm>
+	    <connection>scm:git:https://github.com/3wks/http-service</connection>
+	    <developerConnection>scm:git:https://github.com/3wks/http-service</developerConnection>
+	    <url>https://github.com/3wks/http-service</url>
+  	</scm>
 	
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -46,15 +52,20 @@
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
+	
 	<build>
 		<plugins>
-			<plugin>
+			<plugin> <!-- Release plugin -->
 				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>2.3.2</version>
+				<artifactId>maven-release-plugin</artifactId>
+				<version>2.3.1</version>
+			</plugin>
+			<plugin> <!-- SCM config -->
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-scm-plugin</artifactId>
+				<version>1.7</version>
 				<configuration>
-					<source>1.6</source>
-					<target>1.6</target>
+					<connectionType>connection</connectionType>
 				</configuration>
 			</plugin>
 			<plugin> <!--  Generate sources -->
@@ -136,4 +147,5 @@
 			</plugins>
 		</pluginManagement>
 	</build>
+	
 </project>
