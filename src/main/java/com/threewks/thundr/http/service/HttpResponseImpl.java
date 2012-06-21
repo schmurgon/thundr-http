@@ -114,7 +114,7 @@ public class HttpResponseImpl implements HttpResponse {
 			} catch (InterruptedException e) {
 				throw new HttpRequestException("Failed to wait for completion of asynchronous request: %s", e.getMessage());
 			} catch (ExecutionException e) {
-				throw new HttpRequestException("Failed to get result for asynchronous request: %s", e.getMessage());
+				throw new HttpRequestException(e, "Failed to get result for asynchronous request: %s", e.getMessage());
 			}
 		}
 		return response;

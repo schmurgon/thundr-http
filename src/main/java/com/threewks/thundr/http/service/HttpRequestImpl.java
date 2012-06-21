@@ -296,12 +296,15 @@ public class HttpRequestImpl implements HttpRequest {
 	}
 
 	private void preparePostParameterBody() {
-		List<String> parameterPairs = new ArrayList<String>(this.parameters.size());
-		for (Map.Entry<String, Object> parameter : parameters.entrySet()) {
-			String pair = String.format("%s=%s", encodeParameter(parameter.getKey()), encodeParameter(StringUtil.toString(parameter.getValue())));
-			parameterPairs.add(pair);
+		// if the body has been explicitly set, the consumer is handling data encoding
+		if (body == null) {
+			List<String> parameterPairs = new ArrayList<String>(this.parameters.size());
+			for (Map.Entry<String, Object> parameter : parameters.entrySet()) {
+				String pair = String.format("%s=%s", encodeParameter(parameter.getKey()), encodeParameter(StringUtil.toString(parameter.getValue())));
+				parameterPairs.add(pair);
+			}
+			body = StringUtil.join(parameterPairs, "&");
 		}
-		body = StringUtil.join(parameterPairs, "&");
 	}
 
 	private void addBody(HTTPRequest request) {
