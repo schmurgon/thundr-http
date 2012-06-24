@@ -349,4 +349,10 @@ public class HttpRequestImpl implements HttpRequest {
 			throw new HttpRequestException(e, "Unable to format the parameter using %s: %s", encoding, e.getMessage());
 		}
 	}
+
+	@Override
+	public String toString() {
+		return url;
+	}
+	
 }
