@@ -15,6 +15,7 @@ import java.util.concurrent.Future;
 
 import com.atomicleopard.expressive.Expressive;
 import com.threewks.thundr.http.HttpSupport;
+import com.threewks.thundr.profiler.Profiler;
 import com.google.appengine.api.urlfetch.HTTPHeader;
 import com.google.appengine.api.urlfetch.HTTPResponse;
 
@@ -24,10 +25,12 @@ public class HttpResponseImpl implements HttpResponse {
 	private Map<String, List<String>> headers;
 	private HttpService service;
 	private Map<String, List<HttpCookie>> cookies;
+	private Profiler profiler;
 
 	public HttpResponseImpl(Future<HTTPResponse> future, HttpService service) {
 		this.future = future;
 		this.service = service;
+		this.profiler = profiler == null ? Profiler.None : profiler;
 	}
 
 	@Override

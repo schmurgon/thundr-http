@@ -8,17 +8,21 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Future;
 
+import javax.inject.Inject;
+
 import com.atomicleopard.expressive.Cast;
 import com.atomicleopard.expressive.ETransformer;
+import com.google.appengine.api.urlfetch.HTTPRequest;
+import com.google.appengine.api.urlfetch.HTTPResponse;
+import com.google.appengine.api.urlfetch.URLFetchService;
 import com.threewks.thundr.exception.BaseException;
 import com.threewks.thundr.http.service.typeTransformer.IncomingByteArrayTypeTransformer;
 import com.threewks.thundr.http.service.typeTransformer.IncomingInputStreamTypeTransformer;
 import com.threewks.thundr.http.service.typeTransformer.IncomingStringTypeTransformer;
 import com.threewks.thundr.http.service.typeTransformer.OutgoingDefaultTypeTransformer;
 import com.threewks.thundr.http.service.typeTransformer.OutgoingStringTypeTransformer;
-import com.google.appengine.api.urlfetch.HTTPRequest;
-import com.google.appengine.api.urlfetch.HTTPResponse;
-import com.google.appengine.api.urlfetch.URLFetchService;
+import com.threewks.thundr.profiler.ProfilableFuture;
+import com.threewks.thundr.profiler.Profiler;
 
 public class HttpServiceImpl implements HttpService {
 	private Map<Class<?>, ETransformer<?, InputStream>> outgoingTypeConvertors = new LinkedHashMap<Class<?>, ETransformer<?, InputStream>>();
@@ -26,7 +30,9 @@ public class HttpServiceImpl implements HttpService {
 	private Map<Class<?>, ETransformer<InputStream, ?>> incomingTypeConvertors = new HashMap<Class<?>, ETransformer<InputStream, ?>>();
 
 	private URLFetchService fetchService;
-	
+	@Inject
+	public Profiler profiler = Profiler.None;
+
 	public HttpServiceImpl(URLFetchService fetchService) {
 		this.fetchService = fetchService;
 		// default outgoing transformers
@@ -76,6 +82,11 @@ public class HttpServiceImpl implements HttpService {
 
 	public HttpResponseImpl fetch(HTTPRequest request) {
 		Future<HTTPResponse> fetchAsync = fetchService.fetchAsync(request);
+		if (profiler != null && profiler != Profiler.None) {
+			String data = request.getMethod() + " " + request.getURL();
+			fetchAsync = new ProfilableFuture<HTTPResponse>(Profiler.CategoryHttp, data, profiler, fetchAsync);
+		}
 		return new HttpResponseImpl(fetchAsync, this);
 	}
+
 }
