@@ -88,7 +88,7 @@ public class HttpRequestImpl implements HttpRequest {
 	@Override
 	public HttpRequest contentType(String contentType) {
 		header(HttpSupport.HttpHeaderContentType, contentType);
-		return null;
+		return this;
 	}
 
 	@Override
