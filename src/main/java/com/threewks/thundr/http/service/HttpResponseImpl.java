@@ -14,10 +14,11 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 import com.atomicleopard.expressive.Expressive;
-import com.threewks.thundr.http.HttpSupport;
-import com.threewks.thundr.profiler.Profiler;
 import com.google.appengine.api.urlfetch.HTTPHeader;
 import com.google.appengine.api.urlfetch.HTTPResponse;
+import com.threewks.thundr.http.HttpSupport;
+import com.threewks.thundr.logger.Logger;
+import com.threewks.thundr.profiler.Profiler;
 
 public class HttpResponseImpl implements HttpResponse {
 	private Future<HTTPResponse> future;
@@ -140,20 +141,55 @@ public class HttpResponseImpl implements HttpResponse {
 
 	private Map<String, List<HttpCookie>> buildCookieMap() {
 		Map<String, List<HttpCookie>> cookies = new LinkedHashMap<String, List<HttpCookie>>();
-		List<String> cookieHeaders = headers.get(HttpSupport.HttpHeaderSetCookie);
-		if (cookieHeaders != null) {
-			for (String setCookieHeader : cookieHeaders) {
-				List<HttpCookie> cookieSet = HttpCookie.parse(setCookieHeader);
-				for (HttpCookie httpCookie : cookieSet) {
-					String name = httpCookie.getName();
-					List<HttpCookie> existingCookies = cookies.get(name);
-					if (existingCookies == null) {
-						existingCookies = new ArrayList<HttpCookie>();
-						cookies.put(name, existingCookies);
-					}
-					existingCookies.add(httpCookie);
+		for (String setCookieHeader : getCookieHeaders(headers)) {
+			List<HttpCookie> cookieSet = parseCookies(setCookieHeader);
+			for (HttpCookie httpCookie : cookieSet) {
+				String name = httpCookie.getName();
+				List<HttpCookie> existingCookies = cookies.get(name);
+				if (existingCookies == null) {
+					existingCookies = new ArrayList<HttpCookie>();
+					cookies.put(name, existingCookies);
 				}
+				existingCookies.add(httpCookie);
 			}
+		}
+		return cookies;
+	}
+
+	/**
+	 * Get all cookie headers from the given header map.
+	 * 
+	 * Note: this will get all "Set-Cookie" and "Set-Cookie2" headers.
+	 * 
+	 * @param headers the map of headers to get the set cookie headers from.
+	 * @return a list of headers.
+	 */
+	static List<String> getCookieHeaders(Map<String, List<String>> headers) {
+		List<String> cookieHeaders = new ArrayList<String>();
+		List<String> setCookieHeaders = headers.get(HttpSupport.HttpHeaderSetCookie);
+		if (setCookieHeaders != null) {
+			cookieHeaders.addAll(setCookieHeaders);
+		}
+		List<String> setCookie2Headers = headers.get(HttpSupport.HttpHeaderSetCookie2);
+		if (setCookie2Headers != null) {
+			cookieHeaders.addAll(setCookie2Headers);
+		}
+		return cookieHeaders;
+	}
+
+	/**
+	 * Safely parse a cookie header. If any exceptions are encountered then the exception is caught
+	 * and an empty list is returned.
+	 * 
+	 * @param setCookieHeader the header to parse.
+	 * @return a list of headers, or an empty list if anything goes wrong parsing the header.
+	 */
+	static List<HttpCookie> parseCookies(String setCookieHeader) {
+		List<HttpCookie> cookies = new ArrayList<HttpCookie>();
+		try {
+			cookies = HttpCookie.parse(setCookieHeader);
+		} catch (Exception e) {
+			Logger.warn("Unable to parse cookie from header: %s", setCookieHeader);
 		}
 		return cookies;
 	}
