@@ -81,12 +81,9 @@ public class HttpServiceImpl implements HttpService {
 	}
 
 	public HttpResponseImpl fetch(HTTPRequest request) {
-		Future<HTTPResponse> fetchAsync = fetchService.fetchAsync(request);
-		if (profiler != null && profiler != Profiler.None) {
-			String data = request.getMethod() + " " + request.getURL();
-			fetchAsync = new ProfilableFuture<HTTPResponse>(Profiler.CategoryHttp, data, profiler, fetchAsync);
-		}
+		boolean profile = profiler != null && profiler != Profiler.None;
+		String data = profile ? request.getMethod() + " " + request.getURL() : null;
+		Future<HTTPResponse> fetchAsync = profile ? new ProfilableFuture<HTTPResponse>(Profiler.CategoryHttp, data, profiler, fetchService.fetchAsync(request)) : fetchService.fetchAsync(request);
 		return new HttpResponseImpl(fetchAsync, this);
 	}
-
 }
