@@ -2,7 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.threewks.thundr</groupId>
 	<artifactId>http-service</artifactId>
-	<version>0.9.5-SNAPSHOT</version>
+	<version>0.9.5</version>
 	
 	<repositories>
 		<repository>
@@ -15,7 +15,7 @@
 	    <connection>scm:git:https://github.com/3wks/http-service</connection>
 	    <developerConnection>scm:git:https://github.com/3wks/http-service</developerConnection>
 	    <url>https://github.com/3wks/http-service</url>
-  	  <tag>HEAD</tag>
+  	  <tag>http-service-0.9.5</tag>
   </scm>
   	
   	<distributionManagement>
@@ -34,7 +34,7 @@
 		<dependency>
 			<groupId>com.threewks.thundr</groupId>
 			<artifactId>thundr</artifactId>
-			<version>${project.version}</version>
+			<version>0.9.5</version>
 			<scope>compile</scope>
 		</dependency>
 
