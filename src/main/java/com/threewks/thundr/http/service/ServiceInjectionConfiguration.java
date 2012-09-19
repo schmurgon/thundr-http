@@ -9,8 +9,8 @@ public class ServiceInjectionConfiguration implements com.threewks.thundr.inject
 	@Override
 	public void configure(UpdatableInjectionContext injectionContext) {
 		URLFetchService urlFetchService = URLFetchServiceFactory.getURLFetchService();
-		injectionContext.inject(URLFetchService.class).as(urlFetchService);
-		injectionContext.inject(HttpService.class).as(HttpServiceImpl.class);
+		injectionContext.inject(urlFetchService).as(URLFetchService.class);
+		injectionContext.inject(HttpServiceImpl.class).as(HttpService.class);
 		Logger.info("Loaded HttpService module");
 	}
 }
