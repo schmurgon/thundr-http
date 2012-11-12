@@ -87,7 +87,7 @@ public class HttpRequestImpl implements HttpRequest {
 
 	@Override
 	public HttpRequest contentType(String contentType) {
-		header(HttpSupport.HttpHeaderContentType, contentType);
+		header(HttpSupport.Header.ContentType, contentType);
 		return this;
 	}
 
@@ -315,8 +315,8 @@ public class HttpRequestImpl implements HttpRequest {
 	}
 
 	private void setContentTypeIfNotPresent(ContentType contentType) {
-		if (!headers.containsKey(HttpSupport.HttpHeaderContentType)) {
-			header(HttpSupport.HttpHeaderContentType, contentType.value());
+		if (!headers.containsKey(HttpSupport.Header.ContentType)) {
+			header(HttpSupport.Header.ContentType, contentType.value());
 		}
 	}
 

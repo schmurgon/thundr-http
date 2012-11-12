@@ -16,7 +16,7 @@ import java.util.concurrent.Future;
 import com.atomicleopard.expressive.Expressive;
 import com.google.appengine.api.urlfetch.HTTPHeader;
 import com.google.appengine.api.urlfetch.HTTPResponse;
-import com.threewks.thundr.http.HttpSupport;
+import com.threewks.thundr.http.HttpSupport.Header;
 import com.threewks.thundr.logger.Logger;
 import com.threewks.thundr.profiler.Profiler;
 
@@ -41,7 +41,7 @@ public class HttpResponseImpl implements HttpResponse {
 
 	@Override
 	public String getContentType() {
-		return getHeader(HttpSupport.HttpHeaderContentType);
+		return getHeader(Header.ContentType);
 	}
 
 	@Override
@@ -166,11 +166,11 @@ public class HttpResponseImpl implements HttpResponse {
 	 */
 	static List<String> getCookieHeaders(Map<String, List<String>> headers) {
 		List<String> cookieHeaders = new ArrayList<String>();
-		List<String> setCookieHeaders = headers.get(HttpSupport.HttpHeaderSetCookie);
+		List<String> setCookieHeaders = headers.get(Header.SetCookie);
 		if (setCookieHeaders != null) {
 			cookieHeaders.addAll(setCookieHeaders);
 		}
-		List<String> setCookie2Headers = headers.get(HttpSupport.HttpHeaderSetCookie2);
+		List<String> setCookie2Headers = headers.get(Header.SetCookie2);
 		if (setCookie2Headers != null) {
 			cookieHeaders.addAll(setCookie2Headers);
 		}
