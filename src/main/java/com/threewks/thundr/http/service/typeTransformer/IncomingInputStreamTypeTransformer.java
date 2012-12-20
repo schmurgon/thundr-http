@@ -6,7 +6,7 @@ import com.atomicleopard.expressive.ETransformer;
 
 public class IncomingInputStreamTypeTransformer implements ETransformer<InputStream, InputStream> {
 	@Override
-	public InputStream to(InputStream from) {
+	public InputStream from(InputStream from) {
 		return from;
 	}
 }

@@ -8,8 +8,8 @@ public class OutgoingDefaultTypeTransformer implements ETransformer<Object, Inpu
 	private static final OutgoingStringTypeTransformer stringTypeConvertor = new OutgoingStringTypeTransformer();
 
 	@Override
-	public InputStream to(Object from) {
-		return stringTypeConvertor.to(from.toString());
+	public InputStream from(Object from) {
+		return stringTypeConvertor.from(from.toString());
 	}
 
 }

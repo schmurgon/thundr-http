@@ -7,7 +7,7 @@ import com.threewks.thundr.util.Streams;
 
 public class IncomingByteArrayTypeTransformer implements ETransformer<InputStream, byte[]> {
 	@Override
-	public byte[] to(InputStream from) {
+	public byte[] from(InputStream from) {
 		return Streams.readBytes(from);
 	}
 }

@@ -11,7 +11,7 @@ public class OutgoingStringTypeTransformer implements ETransformer<String, Input
 	private static final String encoding = "UTF-8";
 
 	@Override
-	public InputStream to(String from) {
+	public InputStream from(String from) {
 		return new ByteArrayInputStream(toBytes(from));
 	}
 

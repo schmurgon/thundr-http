@@ -7,7 +7,7 @@ import com.threewks.thundr.util.Streams;
 
 public class IncomingStringTypeTransformer implements ETransformer<InputStream, String> {
 	@Override
-	public String to(InputStream from) {
+	public String from(InputStream from) {
 		return Streams.readString(from);
 	}
 }
