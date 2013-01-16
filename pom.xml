@@ -55,7 +55,7 @@
 		<dependency>
 			<groupId>com.threewks.thundr</groupId>
 			<artifactId>thundr</artifactId>
-			<version${project.version}</version>
+			<version>${project.version}</version>
 			<scope>compile</scope>
 		</dependency>
 
