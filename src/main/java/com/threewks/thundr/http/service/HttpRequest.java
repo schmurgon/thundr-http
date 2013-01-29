@@ -56,7 +56,7 @@ public interface HttpRequest {
 	public HttpRequest parameters(Map<String, Object> parameters);
 
 	public HttpRequest contentType(ContentType contentType);
-	
+
 	public HttpRequest contentType(String contentType);
 
 	public HttpRequest cookie(HttpCookie cookie);
@@ -73,9 +73,30 @@ public interface HttpRequest {
 
 	public HttpResponse head();
 
-	// Authentication not implemented
-	// public HttpRequest authenticate(String username, String password);
-	// public HttpRequest authenticate(String username, String password, String scheme) {
+	/**
+	 * Causes the request to be authorized using the Basic scheme and the provided credentials.
+	 * 
+	 * @param username
+	 * @param password
+	 * 
+	 * @return the {@link HttpRequest} for method chaining
+	 * 
+	 * @throws HttpRequestException if the Basic scheme is not supported
+	 */
+	public HttpRequest authorize(String username, String password);
+
+	/**
+	 * Causes the request to be authorized using the given scheme and the provided credentials.
+	 * 
+	 * @param username
+	 * @param password
+	 * @param scheme
+	 * 
+	 * @return the {@link HttpRequest} for method chaining
+	 * 
+	 * @throws HttpRequestException if the given scheme is not supported
+	 */
+	public HttpRequest authorize(String username, String password, String scheme);
 
 	// Attachments and multipart not implemented
 	// public HttpRequest files(FileParameter... fileParameters);

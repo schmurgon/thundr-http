@@ -98,7 +98,7 @@ public class MockHttpRequest implements HttpRequest {
 		this.contentType = contentType.value();
 		return this;
 	}
-	
+
 	@Override
 	public HttpRequest contentType(String contentType) {
 		this.contentType = contentType;
@@ -185,5 +185,15 @@ public class MockHttpRequest implements HttpRequest {
 
 	public String getMethod() {
 		return method;
+	}
+
+	@Override
+	public HttpRequest authorize(String username, String password) {
+		return null;
+	}
+
+	@Override
+	public HttpRequest authorize(String username, String password, String scheme) {
+		return null;
 	}
 }
