@@ -6,7 +6,7 @@
 	</parent>
 	<artifactId>thundr-http</artifactId>
 	<packaging>jar</packaging>
-	<version>0.9.11-SNAPSHOT</version>
+	<version>0.9.11</version>
 	
 	<name>thundr-http</name>
 	<url>http://3wks.github.com/thundr/</url>
@@ -48,14 +48,14 @@
 		<connection>scm:git:https://github.com/3wks/thundr-http</connection>
 		<developerConnection>scm:git:https://github.com/3wks/thundr-http</developerConnection>
 		<url>https://github.com/3wks/thundr-http</url>
-		<tag>HEAD</tag>
+		<tag>thundr-http-0.9.11</tag>
 	</scm>
 
 	<dependencies>
 		<dependency>
 			<groupId>com.threewks.thundr</groupId>
 			<artifactId>thundr</artifactId>
-			<version>${project.version}</version>
+			<version>0.9.11</version>
 			<scope>compile</scope>
 		</dependency>
 	</dependencies>
